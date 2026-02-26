@@ -1,9 +1,9 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/api/index" }
+    { "source": "/(.*)", "destination": "/api/app" }
   ],
   "functions": {
-    "api/index.py": {
+    "api/app.py": {
       "maxDuration": 60
     }
   }
