@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🧠 Retard Coin Meme Generator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --yellow: #FFE000;
+      --red: #FF2D2D;
+      --blue: #00B4FF;
+      --green: #00FF88;
+      --dark: #0a0a0a;
+      --orange: #FF7A00;
+      --purple: #9B5CFF;
+      --card: #111;
+      --border: rgba(255,224,0,0.2);
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--dark);
+      color: #fff;
+      font-family: 'Nunito', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content:'';
+      position:fixed; inset:0;
+      background: radial-gradient(ellipse 90% 60% at 50% 0%, rgba(255,112,0,0.07) 0%, transparent 60%);
+      pointer-events:none; z-index:0;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 5%;
+      background:rgba(0,0,0,0.8);
+      backdrop-filter:blur(12px);
+      border-bottom:2px solid var(--yellow);
+      position:sticky; top:0; z-index:100;
+    }
+    .nav-logo {
+      font-family:'Fredoka One',cursive;
+      font-size:1.5rem; color:var(--yellow);
+      text-shadow:0 0 20px var(--yellow);
+      text-decoration:none;
+    }
+    .nav-back {
+      font-family:'Fredoka One',cursive;
+      color:#fff; text-decoration:none;
+      font-size:0.95rem; letter-spacing:1px;
+      padding:8px 18px; border-radius:50px;
+      border:2px solid rgba(255,255,255,0.2);
+      transition:border-color 0.2s, color 0.2s;
+    }
+    .nav-back:hover { border-color:var(--yellow); color:var(--yellow); }
+
+    /* ─── HERO BANNER ─── */
+    .hero {
+      text-align:center;
+      padding:60px 20px 40px;
+      position:relative; z-index:1;
+    }
+    .hero-emoji {
+      font-size:clamp(4rem,10vw,7rem);
+      display:block;
+      animation:spin 0.6s ease-out, float 3s ease-in-out 0.6s infinite;
+      filter:drop-shadow(0 0 40px var(--yellow));
+    }
+    @keyframes spin {
+      0% { transform:rotateY(0) scale(0); }
+      100% { transform:rotateY(720deg) scale(1); }
+    }
+    @keyframes float {
+      0%,100% { transform:translateY(0) rotate(-3deg); }
+      50% { transform:translateY(-14px) rotate(3deg); }
+    }
+    .hero h1 {
+      font-family:'Fredoka One',cursive;
+      font-size:clamp(2rem,7vw,4.5rem);
+      color:var(--yellow);
+      text-shadow:4px 4px 0 var(--orange), 8px 8px 0 #000;
+      margin:12px 0 6px;
+      line-height:1.1;
+    }
+    .hero p {
+      color:#aaa; font-size:1.05rem;
+      max-width:540px; margin:0 auto;
+    }
+
+    /* ─── MAIN LAYOUT ─── */
+    .container {
+      max-width:1100px;
+      margin:0 auto;
+      padding:0 20px 80px;
+      position:relative; z-index:1;
+    }
+
+    .generator-grid {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:28px;
+      margin-top:40px;
+    }
+    @media(max-width:768px) {
+      .generator-grid { grid-template-columns:1fr; }
+    }
+
+    /* ─── CARD ─── */
+    .card {
+      background:var(--card);
+      border:2px solid var(--border);
+      border-radius:24px;
+      padding:28px;
+      transition:border-color 0.3s;
+    }
+    .card:hover { border-color:rgba(255,224,0,0.4); }
+    .card-title {
+      font-family:'Fredoka One',cursive;
+      font-size:1.3rem;
+      color:var(--yellow);
+      margin-bottom:18px;
+      display:flex; align-items:center; gap:8px;
+    }
+
+    /* ─── DROP ZONE ─── */
+    .dropzone {
+      border:3px dashed rgba(255,224,0,0.35);
+      border-radius:18px;
+      padding:40px 20px;
+      text-align:center;
+      cursor:pointer;
+      transition:border-color 0.2s, background 0.2s;
+      position:relative;
+      min-height:220px;
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center; gap:10px;
+    }
+    .dropzone.drag-over {
+      border-color:var(--yellow);
+      background:rgba(255,224,0,0.05);
+    }
+    .dropzone input[type="file"] {
+      position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;
+    }
+    .drop-icon { font-size:3rem; }
+    .drop-label {
+      font-family:'Fredoka One',cursive;
+      font-size:1.1rem; color:var(--yellow);
+    }
+    .drop-sub { color:#666; font-size:0.85rem; }
+
+    /* preview inside dropzone */
+    #previewImg {
+      max-width:100%;
+      max-height:280px;
+      border-radius:12px;
+      display:none;
+      border:3px solid var(--yellow);
+      box-shadow:0 0 30px rgba(255,224,0,0.2);
+      object-fit:contain;
+    }
+    .preview-name {
+      font-size:0.8rem; color:#888; display:none;
+    }
+
+    /* ─── CONTROLS ─── */
+    label.field-label {
+      display:block;
+      font-size:0.82rem;
+      color:#888;
+      letter-spacing:1.5px;
+      text-transform:uppercase;
+      margin-bottom:7px;
+    }
+    textarea.note-input {
+      width:100%;
+      background:rgba(255,255,255,0.04);
+      border:2px solid rgba(255,255,255,0.08);
+      border-radius:12px;
+      color:#fff;
+      font-family:'Nunito',sans-serif;
+      font-size:0.95rem;
+      padding:12px 14px;
+      resize:vertical;
+      min-height:90px;
+      transition:border-color 0.2s;
+    }
+    textarea.note-input:focus { outline:none; border-color:var(--yellow); }
+    textarea.note-input::placeholder { color:#555; }
+
+    /* style chips */
+    .style-chips {
+      display:flex; flex-wrap:wrap; gap:8px;
+      margin-bottom:20px;
+    }
+    .chip {
+      padding:6px 14px; border-radius:50px;
+      border:2px solid rgba(255,255,255,0.1);
+      background:transparent; color:#aaa;
+      font-size:0.82rem; font-weight:700;
+      cursor:pointer; transition:all 0.2s;
+      font-family:'Nunito',sans-serif;
+      letter-spacing:0.5px;
+    }
+    .chip.active { border-color:var(--yellow); color:var(--yellow); background:rgba(255,224,0,0.08); }
+    .chip:hover { border-color:rgba(255,224,0,0.5); color:#fff; }
+
+    /* ─── GENERATE BTN ─── */
+    .gen-btn {
+      width:100%; padding:16px;
+      background:var(--yellow);
+      color:#000;
+      font-family:'Fredoka One',cursive;
+      font-size:1.3rem;
+      border:none; border-radius:14px;
+      cursor:pointer;
+      margin-top:20px;
+      transition:transform 0.2s, box-shadow 0.2s;
+      box-shadow:4px 4px 0 #000;
+      display:flex; align-items:center; justify-content:center; gap:10px;
+    }
+    .gen-btn:hover:not(:disabled) {
+      transform:translate(-3px,-3px);
+      box-shadow:7px 7px 0 #000;
+    }
+    .gen-btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+    /* ─── OUTPUT CARD ─── */
+    .output-card {
+      background:var(--card);
+      border:2px solid var(--border);
+      border-radius:24px;
+      padding:28px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      min-height:400px;
+      text-align:center;
+      transition:border-color 0.3s;
+    }
+    .output-card.has-result { border-color:rgba(0,255,136,0.4); }
+
+    .output-placeholder {
+      display:flex; flex-direction:column;
+      align-items:center; gap:14px;
+    }
+    .output-placeholder-emoji { font-size:4rem; animation:wiggle 2s ease-in-out infinite; }
+    @keyframes wiggle {
+      0%,100% { transform:rotate(-5deg); }
+      50% { transform:rotate(5deg); }
+    }
+    .output-placeholder h3 {
+      font-family:'Fredoka One',cursive;
+      color:var(--yellow); font-size:1.4rem;
+    }
+    .output-placeholder p { color:#555; font-size:0.9rem; }
+
+    /* loading */
+    .loading-state {
+      display:none; flex-direction:column; align-items:center; gap:20px;
+    }
+    .loading-state.active { display:flex; }
+    .spinner {
+      width:60px; height:60px;
+      border:4px solid rgba(255,224,0,0.15);
+      border-top:4px solid var(--yellow);
+      border-radius:50%;
+      animation:spinRound 0.8s linear infinite;
+    }
+    @keyframes spinRound { to { transform:rotate(360deg); } }
+    .loading-msgs {
+      font-family:'Fredoka One',cursive;
+      color:var(--yellow); font-size:1.1rem;
+      min-height:1.5em; text-align:center;
+    }
+    .loading-sub { color:#555; font-size:0.85rem; }
+    .loading-brain {
+      font-size:3rem;
+      animation:brainPulse 0.5s ease-in-out infinite alternate;
+    }
+    @keyframes brainPulse {
+      from { transform:scale(1); filter:drop-shadow(0 0 10px var(--yellow)); }
+      to { transform:scale(1.15); filter:drop-shadow(0 0 30px var(--orange)); }
+    }
+
+    /* result */
+    .result-state { display:none; flex-direction:column; align-items:center; gap:16px; width:100%; }
+    .result-state.active { display:flex; }
+    #resultImg {
+      max-width:100%;
+      max-height:420px;
+      border-radius:16px;
+      border:3px solid var(--green);
+      box-shadow:0 0 40px rgba(0,255,136,0.2);
+      object-fit:contain;
+      animation:resultReveal 0.6s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes resultReveal {
+      0% { transform:scale(0.8) rotate(-3deg); opacity:0; }
+      100% { transform:scale(1) rotate(0); opacity:1; }
+    }
+    .result-actions {
+      display:flex; gap:12px; flex-wrap:wrap; justify-content:center;
+    }
+    .btn-dl {
+      background:var(--green); color:#000;
+      font-family:'Fredoka One',cursive;
+      font-size:1rem; padding:11px 24px;
+      border-radius:50px; border:none; cursor:pointer;
+      text-decoration:none; display:inline-flex; align-items:center; gap:7px;
+      transition:transform 0.2s, box-shadow 0.2s;
+      box-shadow:3px 3px 0 #000;
+    }
+    .btn-dl:hover { transform:translate(-2px,-2px); box-shadow:5px 5px 0 #000; }
+    .btn-again {
+      background:transparent; color:var(--yellow);
+      font-family:'Fredoka One',cursive;
+      font-size:1rem; padding:11px 24px;
+      border-radius:50px; border:2px solid var(--yellow); cursor:pointer;
+      transition:background 0.2s, color 0.2s;
+    }
+    .btn-again:hover { background:var(--yellow); color:#000; }
+
+    /* error */
+    .error-state {
+      display:none; flex-direction:column; align-items:center; gap:12px;
+    }
+    .error-state.active { display:flex; }
+    .error-box {
+      background:rgba(255,45,45,0.1); border:2px solid var(--red);
+      border-radius:14px; padding:16px 22px;
+      color:var(--red); font-size:0.9rem; text-align:center;
+      max-width:380px; line-height:1.6;
+    }
+
+    /* ─── EXAMPLES STRIP ─── */
+    .examples-strip {
+      margin-top:50px;
+    }
+    .strip-title {
+      font-family:'Fredoka One',cursive;
+      color:var(--yellow); font-size:1.5rem;
+      margin-bottom:20px; text-align:center;
+    }
+    .examples-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+      gap:14px;
+    }
+    .ex-item {
+      background:rgba(255,255,255,0.04);
+      border:2px solid rgba(255,255,255,0.07);
+      border-radius:14px;
+      aspect-ratio:1;
+      display:flex; align-items:center; justify-content:center;
+      font-size:3.5rem;
+      cursor:pointer;
+      transition:transform 0.25s, border-color 0.25s;
+      position:relative; overflow:hidden;
+    }
+    .ex-item::after {
+      content:attr(data-tip);
+      position:absolute; bottom:0; left:0; right:0;
+      background:rgba(0,0,0,0.8);
+      color:var(--yellow);
+      font-family:'Fredoka One',cursive;
+      font-size:0.72rem; padding:5px 4px;
+      transform:translateY(100%);
+      transition:transform 0.25s;
+      text-align:center;
+    }
+    .ex-item:hover { transform:scale(1.08) rotate(2deg); border-color:var(--yellow); }
+    .ex-item:hover::after { transform:translateY(0); }
+
+    /* ─── PROMPT PREVIEW ─── */
+    .prompt-preview {
+      background:rgba(155,92,255,0.08);
+      border:2px solid rgba(155,92,255,0.25);
+      border-radius:14px;
+      padding:14px 16px;
+      margin-top:16px;
+      font-size:0.8rem; color:#888; line-height:1.6;
+    }
+    .prompt-preview strong { color:var(--purple); }
+
+    /* ─── TOAST ─── */
+    #toast {
+      position:fixed; bottom:24px; left:50%;
+      transform:translateX(-50%) translateY(80px);
+      background:var(--green); color:#000;
+      font-family:'Fredoka One',cursive; font-size:1rem;
+      padding:12px 28px; border-radius:50px; z-index:9999;
+      transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      white-space:nowrap;
+    }
+    #toast.show { transform:translateX(-50%) translateY(0); }
+
+    /* watermark */
+    .watermark-note {
+      text-align:center; color:#333; font-size:0.78rem;
+      margin-top:30px; font-style:italic;
+    }
+  </style>
+</head>
+<body>
+
+<div id="toast">✅ Done!</div>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">🧠 RETARD COIN</a>
+  <a href="/" class="nav-back">← Back to Site</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <span class="hero-emoji">🧠</span>
+  <h1>Meme Generator</h1>
+  <p>Upload any image and our AI will retard-ify it into peak brainrot internet energy. Powered by fal.ai Flux.</p>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+  <div class="generator-grid">
+
+    <!-- LEFT: Upload + Controls -->
+    <div>
+      <div class="card">
+        <div class="card-title">📤 Upload Your Pic</div>
+
+        <div class="dropzone" id="dropzone">
+          <input type="file" id="fileInput" accept="image/*"/>
+          <img id="previewImg" alt="preview"/>
+          <span class="preview-name" id="previewName"></span>
+          <span class="drop-icon" id="dropIcon">📸</span>
+          <span class="drop-label" id="dropLabel">Drop image here or click</span>
+          <span class="drop-sub" id="dropSub">PNG, JPG, WEBP — max 10MB</span>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px">
+        <div class="card-title">🎨 Meme Style</div>
+
+        <label class="field-label">Intensity Level</label>
+        <div class="style-chips" id="intensityChips">
+          <button class="chip" data-val="mild">🙂 Mild</button>
+          <button class="chip active" data-val="full-retard">🧠 Full Retard</button>
+          <button class="chip" data-val="nuclear">☢️ Nuclear</button>
+          <button class="chip" data-val="deep-fried">🍤 Deep Fried</button>
+        </div>
+
+        <label class="field-label" style="margin-top:14px">Extra Instructions</label>
+        <textarea class="note-input" id="noteInput"
+          placeholder="e.g. Make it look like a wojak, add a stonks chart, make the person look extra stupid..."></textarea>
+
+        <div class="prompt-preview">
+          <strong>🤖 AI Prompt Preview:</strong><br/>
+          <span id="promptPreview">Convert this image into full retard meme energy...</span>
+        </div>
+
+        <button class="gen-btn" id="genBtn" onclick="generateMeme()">
+          <span id="genBtnTxt">🧠 RETARD-IFY THIS IMAGE</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- RIGHT: Output -->
+    <div class="output-card" id="outputCard">
+
+      <!-- Placeholder -->
+      <div class="output-placeholder" id="placeholder">
+        <span class="output-placeholder-emoji">🖼️</span>
+        <h3>Your Meme Appears Here</h3>
+        <p>Upload an image and hit the button to unleash maximum regarded energy</p>
+      </div>
+
+      <!-- Loading -->
+      <div class="loading-state" id="loadingState">
+        <span class="loading-brain">🧠</span>
+        <div class="spinner"></div>
+        <div class="loading-msgs" id="loadingMsg">Brainrotting your image...</div>
+        <div class="loading-sub">fal.ai Flux is cooking 🍳 (~15-30s)</div>
+      </div>
+
+      <!-- Result -->
+      <div class="result-state" id="resultState">
+        <img id="resultImg" alt="Generated meme"/>
+        <div class="result-actions">
+          <a id="dlBtn" class="btn-dl" download="retardcoin_meme.jpg">⬇️ Download Meme</a>
+          <button class="btn-again" onclick="resetOutput()">🔄 Make Another</button>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div class="error-state" id="errorState">
+        <span style="font-size:3rem">💀</span>
+        <div class="error-box" id="errorMsg"></div>
+        <button class="btn-again" onclick="resetOutput()">🔄 Try Again</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Examples -->
+  <div class="examples-strip">
+    <div class="strip-title">💡 What Can You Retard-ify?</div>
+    <div class="examples-grid">
+      <div class="ex-item" data-tip="Selfies">🤳</div>
+      <div class="ex-item" data-tip="Pets">🐶</div>
+      <div class="ex-item" data-tip="Food Pics">🍕</div>
+      <div class="ex-item" data-tip="Landscapes">🏔️</div>
+      <div class="ex-item" data-tip="Screenshots">📱</div>
+      <div class="ex-item" data-tip="Products">🛒</div>
+    </div>
+  </div>
+
+  <p class="watermark-note">🧠 RETARD COIN $RTRD — All generated memes are watermarked. For entertainment only. WAGMI.</p>
+</div>
+
+<script>
+  const LOADING_MSGS = [
+    "Brainrotting your image... 🧠",
+    "Adding unnecessary red circles... 🔴",
+    "Cranking saturation to MAX... 🎨",
+    "Writing unhinged captions... ✍️",
+    "Deep frying the pixels... 🍤",
+    "Injecting Gen-Z brainrot... 💀",
+    "Almost regarded enough... 🤪",
+    "Applying final layers of stupid... 🚀",
+  ];
+
+  let selectedFile = null;
+  let intensity = "full-retard";
+  let msgInterval = null;
+
+  // ── Drag & Drop ──────────────────────────────────────────
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault(); dropzone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f) handleFile(f);
+  });
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+  });
+
+  function handleFile(f) {
+    if (!f.type.startsWith('image/')) { showToast('❌ Not an image!', true); return; }
+    if (f.size > 10 * 1024 * 1024) { showToast('❌ File too large (max 10MB)', true); return; }
+    selectedFile = f;
+
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = document.getElementById('previewImg');
+      img.src = ev.target.result;
+      img.style.display = 'block';
+      document.getElementById('previewName').style.display = 'block';
+      document.getElementById('previewName').textContent = f.name;
+      document.getElementById('dropIcon').style.display = 'none';
+      document.getElementById('dropLabel').style.display = 'none';
+      document.getElementById('dropSub').style.display = 'none';
+    };
+    reader.readAsDataURL(f);
+    updatePromptPreview();
+  }
+
+  // ── Intensity Chips ──────────────────────────────────────
+  document.querySelectorAll('#intensityChips .chip').forEach(c => {
+    c.addEventListener('click', () => {
+      document.querySelectorAll('#intensityChips .chip').forEach(x => x.classList.remove('active'));
+      c.classList.add('active');
+      intensity = c.dataset.val;
+      updatePromptPreview();
+    });
+  });
+
+  document.getElementById('noteInput').addEventListener('input', updatePromptPreview);
+
+  function updatePromptPreview() {
+    const note = document.getElementById('noteInput').value;
+    const intensityDesc = {
+      mild: "slightly more meme-ish with subtle chaos",
+      "full-retard": "full absurd chaotic low-IQ internet meme energy with brainrot humor",
+      nuclear: "EXTREME nuclear-level chaos, maximum distortion, incomprehensible brainrot",
+      "deep-fried": "deep-fried JPEG artifact aesthetic, extreme compression, neon oversaturation"
+    }[intensity];
+    let preview = `Transform this image into ${intensityDesc}. Add red circles, emoji scatter, bad captions, RETARD COIN watermark.`;
+    if (note) preview += ` Extra: ${note.slice(0,80)}...`;
+    document.getElementById('promptPreview').textContent = preview;
+  }
+
+  updatePromptPreview();
+
+  // ── Generate ─────────────────────────────────────────────
+  async function generateMeme() {
+    if (!selectedFile) { showToast('📸 Upload an image first!', true); return; }
+
+    setState('loading');
+    startLoadingMsgs();
+
+    const form = new FormData();
+    form.append('image', selectedFile);
+    const extraNote = document.getElementById('noteInput').value;
+    const intensityModifier = {
+      mild: "Make it only slightly meme-ified, keep it somewhat normal.",
+      "full-retard": "",
+      nuclear: "Go ABSOLUTELY NUCLEAR. Maximum chaos, maximum distortion, incomprehensible.",
+      "deep-fried": "Apply extreme deep-fried JPEG artifact aesthetic with blown-out neon colors."
+    }[intensity];
+    form.append('note', (intensityModifier + " " + extraNote).trim());
+
+    try {
+      const res = await fetch('/api/generate', { method:'POST', body:form });
+      const data = await res.json();
+
+      stopLoadingMsgs();
+
+      if (data.error) {
+        setState('error', data.error);
+        return;
+      }
+
+      // Show result
+      const resultImg = document.getElementById('resultImg');
+      resultImg.src = data.image_url;
+      resultImg.onload = () => setState('result');
+      resultImg.onerror = () => setState('error', 'Failed to load generated image.');
+      document.getElementById('dlBtn').href = data.image_url;
+
+    } catch(e) {
+      stopLoadingMsgs();
+      setState('error', `Network error: ${e.message}`);
+    }
+  }
+
+  function setState(s, msg='') {
+    document.getElementById('placeholder').style.display = 'none';
+    document.getElementById('loadingState').classList.remove('active');
+    document.getElementById('resultState').classList.remove('active');
+    document.getElementById('errorState').classList.remove('active');
+    document.getElementById('outputCard').classList.remove('has-result');
+    document.getElementById('genBtn').disabled = false;
+
+    if (s === 'loading') {
+      document.getElementById('loadingState').classList.add('active');
+      document.getElementById('genBtn').disabled = true;
+    } else if (s === 'result') {
+      document.getElementById('resultState').classList.add('active');
+      document.getElementById('outputCard').classList.add('has-result');
+      showToast('🧠 Meme generated! WAGMI!');
+    } else if (s === 'error') {
+      document.getElementById('errorState').classList.add('active');
+      document.getElementById('errorMsg').textContent = msg || 'Something went regarded wrong.';
+    }
+  }
+
+  function resetOutput() {
+    document.getElementById('placeholder').style.display = 'flex';
+    document.getElementById('resultState').classList.remove('active');
+    document.getElementById('errorState').classList.remove('active');
+    document.getElementById('outputCard').classList.remove('has-result');
+    document.getElementById('genBtn').disabled = false;
+  }
+
+  let msgIdx = 0;
+  function startLoadingMsgs() {
+    msgIdx = 0;
+    document.getElementById('loadingMsg').textContent = LOADING_MSGS[0];
+    msgInterval = setInterval(() => {
+      msgIdx = (msgIdx + 1) % LOADING_MSGS.length;
+      document.getElementById('loadingMsg').textContent = LOADING_MSGS[msgIdx];
+    }, 2500);
+  }
+  function stopLoadingMsgs() {
+    if (msgInterval) { clearInterval(msgInterval); msgInterval = null; }
+  }
+
+  // ── Toast ────────────────────────────────────────────────
+  function showToast(msg, isError=false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = isError ? 'var(--red)' : 'var(--green)';
+    t.style.color = '#fff';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+</script>
+</body>
+</html>
